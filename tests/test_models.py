@@ -26,6 +26,7 @@ While debugging just these tests it's convenient to use this:
 import os
 import logging
 import unittest
+import inspect
 from decimal import Decimal
 from service.models import Product, Category, db
 from service import app
@@ -100,6 +101,54 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(Decimal(new_product.price), product.price)
         self.assertEqual(new_product.available, product.available)
         self.assertEqual(new_product.category, product.category)
+
+    def test_read_a_product(self):
+        """It should Read a product"""
+        product = ProductFactory()
+        app.logger.debug(msg=str(product))
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        new_product = Product.find(product.id)
+        self.assertEqual(new_product.name, product.name)
+        self.assertEqual(new_product.description, product.description)
+        self.assertEqual(Decimal(new_product.price), product.price)
+        self.assertEqual(new_product.available, product.available)
+        self.assertEqual(new_product.category, product.category)
+
+    def test_update_a_product(self):
+        """It should Update a product"""
+        product = ProductFactory()
+        app.logger.debug(msg=str(product))
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        app.logger.debug(msg=str(product))
+        product.description = 'Updated description'
+        original_id = product.id
+        product.update()
+        self.assertEqual(product.id, original_id)
+        self.assertEqual(product.description, 'Updated description')
+        products = Product.all()
+        updated_product = products[0]
+        self.assertEqual(updated_product.id, original_id)
+        self.assertEqual(updated_product.description, 'Updated description')
+        
+    def test_delete_a_product(self):
+        """It should Delete a product"""
+        products = Product.all()
+        self.assertEqual(products, [])
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(product.id)
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        # Check that it matches the original product
+        product.delete()
+        products = Product.all()
+        self.assertEqual(products, [])
 
     #
     # ADD YOUR TEST CASES HERE

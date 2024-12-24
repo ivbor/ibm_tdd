@@ -18,6 +18,7 @@
 Test Factory to make fake objects for testing
 """
 import factory
+import inspect
 from factory.fuzzy import FuzzyChoice, FuzzyDecimal, FuzzyText
 from service.models import Product, Category
 
@@ -33,9 +34,16 @@ class ProductFactory(factory.Factory):
     id = factory.Sequence(lambda n: n)
     name = FuzzyText(length=100)
     description = FuzzyText(length=250)
-    price = FuzzyDecimal()
+    price = FuzzyDecimal(1)
     available = FuzzyChoice(choices=[True, False])
-    category = FuzzyChoice([Category.getattr(i) for i in 
-        inspect.getmembers(Category, 
-        lambda a:not(inspect.isroutine(a)))])
+    category = FuzzyChoice(
+        choices=[
+            Category.UNKNOWN,
+            Category.CLOTHS,
+            Category.FOOD,
+            Category.HOUSEWARES,
+            Category.AUTOMOTIVE,
+            Category.TOOLS,
+        ]
+    )
     ## Add code to create Fake Products 
