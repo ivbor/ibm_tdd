@@ -26,7 +26,6 @@ While debugging just these tests it's convenient to use this:
 import os
 import logging
 import unittest
-import inspect
 from decimal import Decimal
 from service.models import Product, Category, db
 from service import app
@@ -133,7 +132,7 @@ class TestProductModel(unittest.TestCase):
         updated_product = products[0]
         self.assertEqual(updated_product.id, original_id)
         self.assertEqual(updated_product.description, 'Updated description')
-        
+
     def test_delete_a_product(self):
         """It should Delete a product"""
         products = Product.all()
@@ -150,6 +149,75 @@ class TestProductModel(unittest.TestCase):
         products = Product.all()
         self.assertEqual(products, [])
 
+    def test_list_all_products(self):
+        """It should List all products"""
+        products = Product.all()
+        self.assertEqual(products, [])
+        for _ in range(5):
+            product = ProductFactory()
+            product.create()
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+
+    def test_find_product_by_name(self):
+        """It should Find product by name"""
+        for i in range(5):
+            product = ProductFactory()
+            if i == 0:
+                product_to_retrieve = product.name
+            product.create()
+        products = Product.find_by_name(product_to_retrieve).all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].name, product_to_retrieve)
+
+    def test_find_product_by_availability(self):
+        """It should Find product by availability"""
+        availabilities = []
+        for i in range(10):
+            product = ProductFactory()
+            product.create()
+            if i == 0:
+                product_id = product.id
+            availabilities.append(product.available)
+        products = Product.find_by_availability(
+            Product.find(product_id).available).all()
+        count = sum(availabilities) if availabilities[0] \
+            else len(availabilities) - sum(availabilities)
+        self.assertEqual(len(products), count)
+        for product in products:
+            self.assertEqual(product.available, availabilities[0])
+
+    def test_find_product_by_category(self):
+        """It should Find product by category"""
+        categories = []
+        for i in range(10):
+            product = ProductFactory()
+            product.create()
+            if i == 0:
+                product_category = product.category
+            categories.append(product.category)
+        products = Product.find_by_category(product_category).all()
+        categories = [i for i in categories if i == product_category]
+        self.assertEqual(len(products), len(categories))
+        for product in products:
+            self.assertEqual(product.category, categories[0])
+
+    def test_find_product_by_price(self):
+        """It should Find product by price"""
+        prices = []
+        for i in range(10):
+            product = ProductFactory()
+            product.create()
+            if i == 0:
+                product_price = product.price
+            prices.append(product.price)
+        products = Product.find_by_price(product_price).all()
+        products_str = Product.find_by_price(str(product_price)).all()
+        self.assertEqual(products, products_str)
+        prices = [i for i in prices if i == product_price]
+        self.assertEqual(len(products), len(prices))
+        for product in products:
+            self.assertEqual(product.price, prices[0])
     #
     # ADD YOUR TEST CASES HERE
     #
